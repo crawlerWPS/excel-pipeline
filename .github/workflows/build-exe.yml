@@ -26,10 +26,10 @@ jobs:
 
       - name: Build 32-bit EXE with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile app.py --add-data "templates;templates" --add-data "static;static"
+          pyinstaller --noconfirm --onefile app.py --add-data "templates;templates"
 
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pdf-tool-exe
+          name: excel-pipeline-exe
           path: dist/app.exe
