@@ -143,15 +143,30 @@ def index():
         A = A[['客户名称','所属中心支行'] + NUM_COLS_A]
         A.to_excel(os.path.join(updir, 'A_对公聚合.xlsx'), index=False)
 
-        # B
+        # B - 利率互换收入明细处理
         irs = dfs['irs_income_detail'].copy()
+
+        # 删除第一行（如果是标题/说明行）
         if irs.shape[0] > 0:
             irs = irs.iloc[1:, :].reset_index(drop=True)
+
+        # 转数值
         irs['分行落账损益'] = to_numeric(irs['分行落账损益'])
-        irs_g = irs.groupby('客户名称', as_index=False)['分行落账损益'].sum().rename(columns={'分行落账损益':'利率互换'})
-        B = irs_g.merge(cust_map_sub, on='客户名称', how='left')
-        B = B[['客户名称','所属中心支行','利率互换']]
+
+        # 把“记账机构”字段改名为“所属中心支行”，保持和 A 表一致
+        if '记账机构' in irs.columns:
+            irs.rename(columns={'记账机构': '所属中心支行'}, inplace=True)
+
+        # 按客户名称 + 所属中心支行 汇总
+        irs_g = (
+            irs.groupby(['客户名称','所属中心支行'], as_index=False)['分行落账损益']
+            .sum()
+            .rename(columns={'分行落账损益':'利率互换'})
+        )
+
+        B = irs_g[['客户名称','所属中心支行','利率互换']]
         B.to_excel(os.path.join(updir, 'B_利率互换聚合.xlsx'), index=False)
+
 
         # C
         C = A.merge(B[['客户名称','所属中心支行','利率互换']], on='客户名称', how='outer', suffixes=('_A','_B'))
