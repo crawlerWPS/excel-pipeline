@@ -203,7 +203,7 @@ def index():
 
         return render_template('result.html',
                                summaries=summaries,
-                               upload_dir_rel=os.path.relpath(updir, start=os.getcwd()),
+                               upload_dir_rel=os.path.basename(updir),
                                downloads=downloads)
 
     return render_template('index.html', required_files=REQUIRED_FILES, templates_keys=list(TEMPLATE_COLUMNS.keys()))
