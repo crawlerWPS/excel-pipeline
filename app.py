@@ -3,6 +3,8 @@ from werkzeug.utils import secure_filename
 import os
 import datetime as dt
 import pandas as pd
+import webbrowser
+import threading
 from io import BytesIO
 
 from config import Config
@@ -206,5 +208,9 @@ def index():
 
     return render_template('index.html', required_files=REQUIRED_FILES, templates_keys=list(TEMPLATE_COLUMNS.keys()))
 
+def open_browser():
+    webbrowser.open_new("http://127.0.0.1:5000")
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    threading.Timer(1.0, open_browser).start()
+    app.run()
