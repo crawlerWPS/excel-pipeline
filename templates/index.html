@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3 class="mb-3">上传 5 个 Excel（支持 .xlsx/.xls）</h3>
+<form method="post" enctype="multipart/form-data">
+  <div class="row g-3">
+    <div class="col-12">
+      <label class="form-label">{{ required_files['corp_mid_income_detail'] }}</label>
+      <input class="form-control" type="file" name="corp_mid_income_detail" accept=".xlsx,.xls" required>
+    </div>
+    <div class="col-12">
+      <label class="form-label">{{ required_files['retail_spot_income'] }}</label>
+      <input class="form-control" type="file" name="retail_spot_income" accept=".xlsx,.xls" required>
+    </div>
+    <div class="col-12">
+      <label class="form-label">{{ required_files['irs_income_detail'] }}</label>
+      <input class="form-control" type="file" name="irs_income_detail" accept=".xlsx,.xls" required>
+    </div>
+    <div class="col-12">
+      <label class="form-label">{{ required_files['cust_branch_map'] }}</label>
+      <input class="form-control" type="file" name="cust_branch_map" accept=".xlsx,.xls" required>
+    </div>
+    <div class="col-12">
+      <label class="form-label">{{ required_files['org_code_map'] }}</label>
+      <input class="form-control" type="file" name="org_code_map" accept=".xlsx,.xls" required>
+    </div>
+  </div>
+  <div class="mt-4">
+    <button class="btn btn-primary" type="submit">提交并处理</button>
+    <a class="btn btn-secondary" href="{{ url_for('index') }}">重置</a>
+  </div>
+</form>
+
+<hr class="my-4">
+<h4>下载输入模板（5 个）</h4>
+<ul>
+  {% for key in templates_keys %}
+  <li><a href="{{ url_for('template_download', key=key) }}">{{ key }}_模板.xlsx</a></li>
+  {% endfor %}
+</ul>
+
+<hr class="my-4">
+<ol>
+  <li>对公四项（即期/远期/掉期/期权）按客户汇总，映射所属中心支行 → A。</li>
+  <li>利率互换删除第一行后按客户汇总（分行落账损益），映射所属中心支行 → B。</li>
+  <li>A 与 B 按客户名称合并 → C（优先保留 A 的所属中心支行）。</li>
+  <li>对私即期按机构号关联机构名称（分支机构号） → D。</li>
+  <li>将 D 转为 C 相同结构后纵向拼接 → E。</li>
+  <li>按所属中心支行汇总五项并生成“合计” → 透视表。</li>
+</ol>
+{% endblock %}

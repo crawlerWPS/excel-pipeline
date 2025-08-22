@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3 class="mb-3">处理完成</h3>
+<p class="text-muted">上传目录：<code>{{ upload_dir_rel }}</code></p>
+
+<h5 class="mt-4">输入文件摘要</h5>
+<div class="row">
+  {% for key, info in summaries.items() %}
+  <div class="col-md-6 mb-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ info.desc }}</h5>
+        <h6 class="card-subtitle mb-2 text-body-secondary">{{ info.filename }}</h6>
+        <ul class="list-group list-group-flush mt-3">
+          <li class="list-group-item">行数：{{ info.rows }}</li>
+          <li class="list-group-item">列数：{{ info.cols }}</li>
+          <li class="list-group-item">前12列名：<code>{{ ', '.join(info.columns) }}</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<h5 class="mt-4">下载结果</h5>
+<ul>
+  {% for name, href in downloads %}
+  <li><a href="{{ href }}">{{ name }}</a></li>
+  {% endfor %}
+</ul>
+
+<a class="btn btn-primary mt-3" href="{{ url_for('index') }}">返回继续处理</a>
+{% endblock %}
