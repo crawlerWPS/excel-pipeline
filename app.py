@@ -209,8 +209,11 @@ def index():
     return render_template('index.html', required_files=REQUIRED_FILES, templates_keys=list(TEMPLATE_COLUMNS.keys()))
 
 def open_browser():
-    webbrowser.open_new("http://127.0.0.1:5000")
+    try:
+        webbrowser.open_new("http://127.0.0.1:5000")
+    except Exception as e:
+        print(f"无法打开浏览器: {e}")
 
 if __name__ == '__main__':
-    threading.Timer(1.0, open_browser).start()
+    threading.Timer(5.0, open_browser).start()
     app.run()
