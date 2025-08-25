@@ -105,18 +105,38 @@ def index():
         summaries = {}
         for field, desc in REQUIRED_FILES.items():
             f = request.files[field]
-            filename = secure_filename(f.filename)
+            filename = secure_filename(f.filename or '')
+            if not filename:
+                flash(f"{desc} 未选择文件", 'danger')
+                return redirect(url_for('index'))
+
             if not allowed_file(filename):
                 flash(f"{desc} 仅支持 .xlsx/.xls 文件：{filename}", 'danger')
                 return redirect(url_for('index'))
+
             save_path = os.path.join(updir, f"{field}_{filename}")
             f.save(save_path)
 
             try:
                 df = pd.read_excel(save_path, sheet_name=0)
+
+                # === 列名清洗：去全角空格、回车/换行、首尾空格与中间所有空白 ===
+                df.columns = (
+                    df.columns.astype(str)
+                    .str.replace('\u3000', ' ')               # 全角空格 -> 半角
+                    .str.replace(r'[\r\n]+', '', regex=True)  # 去掉回车/换行
+                    .str.strip()                              # 去首尾空格
+                    .str.replace(r'\s+', '', regex=True)      # 去中间所有空白
+                )
+
+                # 去掉空列/索引残留（如 "Unnamed: 0"）
+                df = df.loc[:, ~df.columns.str.contains(r'^Unnamed', na=False)]
+
             except Exception as e:
                 flash(f"读取 {desc} 失败：{e}", 'danger')
                 return redirect(url_for('index'))
+
+            # 使用清洗后的列名进行必需列校验
             need = REQ_COLS.get(field, [])
             missing_cols = [c for c in need if c not in df.columns]
             if missing_cols:
@@ -145,10 +165,6 @@ def index():
 
         # B - 利率互换收入明细处理
         irs = dfs['irs_income_detail'].copy()
-
-        # 删除第一行（如果是标题/说明行）
-        if irs.shape[0] > 0:
-            irs = irs.iloc[1:, :].reset_index(drop=True)
 
         # 转数值
         irs['分行落账损益'] = to_numeric(irs['分行落账损益'])
