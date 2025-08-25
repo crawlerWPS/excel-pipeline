@@ -33,8 +33,8 @@
 <hr class="my-4">
 <h4>下载输入模板（5 个）</h4>
 <ul>
-  {% for key in templates_keys %}
-  <li><a href="{{ url_for('template_download', key=key) }}">{{ key }}_模板.xlsx</a></li>
+  {% for key, value in templates_keys %}
+  <li><a href="{{ url_for('template_download', key=key) }}">{{ value['name'] }}_模板.xlsx</a></li>
   {% endfor %}
 </ul>
 

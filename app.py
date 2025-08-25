@@ -23,11 +23,11 @@ REQUIRED_FILES = {
 }
 
 TEMPLATE_COLUMNS = {
-    'corp_mid_income_detail': ['客户名称','即期','远期','掉期','期权'],
-    'retail_spot_income': ['客户名称','机构号','损益金额'],
-    'irs_income_detail': ['客户名称','分行落账损益'],
-    'cust_branch_map': ['客户名称','所属中心支行'],
-    'org_code_map': ['名称','分支机构号']
+    'corp_mid_income_detail': {'name': '对公业务-分行中间业务收入统计客户收入明细【即期、远期、掉期、期权】', 'columns': ['客户名称','即期','远期','掉期','期权']},
+    'retail_spot_income': {'name': '对私业务-即期收入', 'columns': ['客户名称','机构号','损益金额']},
+    'irs_income_detail': {'name': '利率互换收入明细', 'columns': ['客户名称','分行落账损益']},
+    'cust_branch_map': {'name': '客户和管户机构（支行）对应关系（客户名称、所属中心支行）', 'columns': ['客户名称','所属中心支行']},
+    'org_code_map': {'name': '机构号映射表（名称、分支机构号）', 'columns': ['名称','分支机构号']}
 }
 
 NUM_COLS_A = ['即期','远期','掉期','期权']
@@ -51,7 +51,7 @@ def template_download(key):
     if key not in TEMPLATE_COLUMNS:
         flash('未知的模板键。', 'danger')
         return redirect(url_for('index'))
-    cols = TEMPLATE_COLUMNS[key]
+    cols = TEMPLATE_COLUMNS[key]['columns']
     examples = {
         'corp_mid_income_detail': [
             {'客户名称':'示例客户A','即期':1000,'远期':0,'掉期':0,'期权':0},
@@ -79,7 +79,7 @@ def template_download(key):
     with pd.ExcelWriter(bio, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='模板')
     bio.seek(0)
-    filename = f"{key}_模板.xlsx"
+    filename = f"{TEMPLATE_COLUMNS[key]['name']}_模板.xlsx"
     return send_file(bio, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/download/<path:ts>/<path:filename>')
@@ -265,7 +265,7 @@ def index():
                                upload_dir_rel=os.path.basename(updir),
                                downloads=downloads)
 
-    return render_template('index.html', required_files=REQUIRED_FILES, templates_keys=list(TEMPLATE_COLUMNS.keys()))
+    return render_template('index.html', required_files=REQUIRED_FILES, templates_keys=list(TEMPLATE_COLUMNS.items()))
 
 def open_browser():
     webbrowser.open_new("http://127.0.0.1:5000")
