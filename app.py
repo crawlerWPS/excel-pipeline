@@ -166,22 +166,50 @@ def index():
         # B - 利率互换收入明细处理
         irs = dfs['irs_income_detail'].copy()
 
-        # 转数值
-        irs['分行落账损益'] = to_numeric(irs['分行落账损益'])
-
-        # 把“记账机构”字段改名为“所属中心支行”，保持和 A 表一致
-        if '记账机构' in irs.columns:
+        # 若有“记账机构”就统一为“所属中心支行”
+        if '记账机构' in irs.columns and '所属中心支行' not in irs.columns:
             irs.rename(columns={'记账机构': '所属中心支行'}, inplace=True)
 
-        # 按客户名称 + 所属中心支行 汇总
-        irs_g = (
-            irs.groupby(['客户名称','所属中心支行'], as_index=False)['分行落账损益']
-            .sum()
-            .rename(columns={'分行落账损益':'利率互换'})
+        # —— 值级清洗：把金额列清理成可解析的数字字符串 ——
+        col = '分行落账损益'
+        if col not in irs.columns:
+            raise ValueError("利率互换收入明细缺少列：分行落账损益")
+
+        s = (
+            irs[col].astype(str)
+            .str.replace('\u3000', ' ')              # 全角空格→半角
+            .str.replace(r'[\r\n]+', '', regex=True) # 去回车/换行
+            .str.replace('\u202f', '', regex=False)  # 窄不换行空格
+            .str.replace('\xa0', '', regex=False)    # 不换行空格
+            .str.replace(',', '', regex=False)       # 去千分位逗号
+            .str.replace(' ', '', regex=False)       # 去所有空格
+            .str.replace('¥', '', regex=False).str.replace('￥', '', regex=False)  # 去币符号
+            .str.replace('−', '-', regex=False)      # 数学负号→普通减号
+            .str.replace('—', '-', regex=False).str.replace('–', '-', regex=False) # 破折号变体
+            .str.replace(r'^\((.*)\)$', r'-\1', regex=True)  # 括号负数→前置负号
         )
+
+        irs[col] = pd.to_numeric(s, errors='coerce').fillna(0.0)
+
+        # （可选）简单诊断：看看成功解析了多少
+        # parsed_ok = irs[col].ne(0).sum()
+        # print("非零解析条数：", parsed_ok)
+
+        # 按 客户名称 + 所属中心支行 汇总
+        group_keys = ['客户名称', '所属中心支行'] if '所属中心支行' in irs.columns else ['客户名称']
+        irs_g = (
+            irs.groupby(group_keys, as_index=False)[col]
+            .sum()
+            .rename(columns={col: '利率互换'})
+        )
+
+        # 若没有“所属中心支行”列（极少数情况），后续可再去映射；否则直接输出
+        if '所属中心支行' not in irs_g.columns:
+            irs_g['所属中心支行'] = None
 
         B = irs_g[['客户名称','所属中心支行','利率互换']]
         B.to_excel(os.path.join(updir, 'B_利率互换聚合.xlsx'), index=False)
+
 
 
         # C
