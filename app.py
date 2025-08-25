@@ -41,6 +41,7 @@ REQ_COLS = {
 
 def allowed_file(filename: str) -> bool:
     ext = os.path.splitext(filename)[1].lower()
+    print(f"上传的文件名：{filename}，扩展名：{ext}")  # 打印文件名和扩展名
     return ext in ALLOWED_EXTENSIONS
 
 def to_numeric(series):
@@ -103,9 +104,12 @@ def index():
 
         dfs = {}
         summaries = {}
+        # print(REQUIRED_FILES.items())
         for field, desc in REQUIRED_FILES.items():
             f = request.files[field]
-            filename = secure_filename(f.filename or '')
+            print(f)
+            # filename = secure_filename(f.filename or '')
+            filename = f.filename or ''
             if not filename:
                 flash(f"{desc} 未选择文件", 'danger')
                 return redirect(url_for('index'))
