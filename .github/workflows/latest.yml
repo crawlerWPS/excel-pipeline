@@ -1,0 +1,35 @@
+name: Build 32-bit EXE for Windows
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup 32-bit Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7'
+          architecture: 'x86'  # ⬅⬅⬅ 强制使用 32 位 Python
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build 32-bit EXE with PyInstaller
+        run: |
+          pyinstaller --noconfirm --onefile app.py --add-data "templates;templates"
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: excel-pipeline-exe
+          path: dist/app.exe
